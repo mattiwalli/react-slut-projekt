@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {  useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import type { Country } from "@/types/country";
 import {
@@ -29,6 +29,10 @@ export default function CountriesList() {
   const pageSize = parseInt(params.get("pageSize") ?? "20", 10);
 
   
+  const [isSearching, setIsSearching] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const SPIN_TIME = 1200; 
+
   const { data, isLoading, isError, error } = useQuery<Country[], Error>({
     queryKey: ["countries"],
     queryFn: async () => {
@@ -61,3 +65,34 @@ export default function CountriesList() {
     staleTime: 1000 * 60 * 10,
   });
 
+  /*  jobbar på filtretingen  */
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    return data.filter((c) => {
+      const okRegion = region === "All" || c.region === region;
+      const okQuery = c.name.common.toLowerCase().includes(query.toLowerCase());
+      return okRegion && okQuery;
+    });
+  }, [data, query, region]);
+
+  /*  joabbar på pagineringen */
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+
+ 
+  function setParam(name: string, value: string, resetPage = false) {
+    const p = new URLSearchParams(params);
+    p.set(name, value);
+    if (resetPage) p.set("page", "1");
+    setParams(p);
+  }
+
+  /* spinnern körts först sedan kommer löänderna  */
+  function handleSearchSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const text = new FormData(e.currentTarget).get("q") ?? "";
+    setIsSearching(true);
+    setParam("query", String(text), true); // URL uppdateras, men vi visar inte listan än
+    window.setTimeout(() => setIsSearching(false), SPIN_TIME);
+  }
