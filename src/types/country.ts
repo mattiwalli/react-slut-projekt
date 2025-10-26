@@ -1,5 +1,3 @@
-// Grund-typer för REST Countries + väder + wiki + bilder
-
 export type Country = {
   cca2: string;
   cca3: string;
