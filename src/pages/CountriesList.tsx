@@ -30,8 +30,6 @@ export default function CountriesList() {
   const region = (params.get("region") as Region) ?? "All";
   const page = Math.max(1, parseInt(params.get("page") ?? "1", 10));
   const pageSize = parseInt(params.get("pageSize") ?? "20", 10);
-
-  // Manuell UX-spinner vid sök & navigering
   const [isSearching, setIsSearching] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -55,7 +53,7 @@ export default function CountriesList() {
   const start = Math.min((page - 1) * pageSize, Math.max(0, (totalPages - 1) * pageSize));
   const items = filtered.slice(start, start + pageSize);
 
-  // Clamp page när filter/sök ändras
+ 
   useEffect(() => {
     const current = Math.max(1, parseInt(params.get("page") ?? "1", 10));
     if (current > totalPages) {
