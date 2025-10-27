@@ -4,7 +4,7 @@ const BASE = "https://restcountries.com/v3.1";
 
 async function getJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url} -> ${res.status}`);
+  if (!res.ok) throw new Error("Något fel uppstod vid fetchning, testa igen");
   return res.json();
 }
 
