@@ -9,8 +9,6 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
@@ -29,7 +27,8 @@ export default function CountriesList() {
   const query = params.get("query") ?? "";
   const region = (params.get("region") as Region) ?? "All";
   const page = Math.max(1, parseInt(params.get("page") ?? "1", 10));
-  const pageSize = parseInt(params.get("pageSize") ?? "20", 10);
+  const pageSize = parseInt(params.get("pageSize") ?? "20", 8);
+
   const [isSearching, setIsSearching] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -53,7 +52,7 @@ export default function CountriesList() {
   const start = Math.min((page - 1) * pageSize, Math.max(0, (totalPages - 1) * pageSize));
   const items = filtered.slice(start, start + pageSize);
 
- 
+  
   useEffect(() => {
     const current = Math.max(1, parseInt(params.get("page") ?? "1", 10));
     if (current > totalPages) {
@@ -85,7 +84,6 @@ export default function CountriesList() {
     }, SPIN_TIME);
   }
 
-  
   const showSpinner = isSearching || isNavigating || isLoading || isFetching;
 
   if (showSpinner && !isError) {
@@ -116,15 +114,34 @@ export default function CountriesList() {
     );
   }
 
+  // Bygg upp pagination)
+  const pageItems: (number | "...")[] = (() => {
+    const pages: (number | "...")[] = [];
+    const first = 1;
+    const last = totalPages;
+    const left = Math.max(2, page - 1);
+    const right = Math.min(last - 1, page + 1);
+    pages.push(first);
+    if (left > first + 1) pages.push("...");
+    for (let n = left; n <= right; n++) {
+      if (n > first && n < last) pages.push(n);
+    }
+    if (right < last - 1) pages.push("...");
+    if (last > 1) pages.push(last);
+    return pages;
+  })();
+
   return (
     <section>
       <h1 className="text-2xl font-bold mb-3">Länder</h1>
 
+      {/* min söknings forlmulär */}
       <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 mb-3">
         <Input id="q" name="q" defaultValue={query} placeholder="Sök land..." aria-label="Sök land" />
         <Button type="submit">Sök</Button>
       </form>
 
+      {/* Reginonknapparna all, europa osv */}
       <div role="group" aria-label="Filtrera region" className="flex flex-wrap gap-2 mb-3">
         {REGIONS.map((r) => (
           <Button
@@ -173,50 +190,50 @@ export default function CountriesList() {
             ))}
           </ul>
 
+          
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious
+                <Button
+                  variant="outline"
                   onClick={() => page > 1 && setParam("page", String(page - 1))}
-                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                  disabled={page === 1}
                   aria-label="Föregående sida"
-                />
+                  title="Föregående sida"
+                >
+                  Föregående
+                </Button>
               </PaginationItem>
 
-              {(() => {
-                const pages: (number | "...")[] = [];
-                const left = Math.max(2, page - 1);
-                const right = Math.min(totalPages - 1, page + 1);
-
-                pages.push(1);
-                if (left > 2) pages.push("...");
-                for (let n = left; n <= right; n++) if (n > 1 && n < totalPages) pages.push(n);
-                if (right < totalPages - 1) pages.push("...");
-                if (totalPages > 1) pages.push(totalPages);
-
-                return pages.map((n, i) =>
-                  n === "..." ? (
-                    <PaginationItem key={`e-${i}`}><PaginationEllipsis /></PaginationItem>
-                  ) : (
-                    <PaginationItem key={n}>
-                      <PaginationLink
-                        isActive={n === page}
-                        onClick={() => setParam("page", String(n))}
-                        aria-label={`Gå till sida ${n}`}
-                      >
-                        {n}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                );
-              })()}
+              {pageItems.map((n, i) =>
+                n === "..." ? (
+                  <PaginationItem key={`e-${i}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={n}>
+                    <PaginationLink
+                      isActive={n === page}
+                      onClick={() => setParam("page", String(n))}
+                      aria-label={`Gå till sida ${n}`}
+                      title={`Gå till sida ${n}`}
+                    >
+                      {n}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
 
               <PaginationItem>
-                <PaginationNext
+                <Button
+                  variant="outline"
                   onClick={() => page < totalPages && setParam("page", String(page + 1))}
-                  className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                  disabled={page === totalPages}
                   aria-label="Nästa sida"
-                />
+                  title="Nästa sida"
+                >
+                  Nästa
+                </Button>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
